@@ -40,7 +40,7 @@ from .utils import load_file, write_file, fixg, ftimedelta, _func_
 from .constants import VERSION as BOTVERSION
 from .constants import DISCORD_MSG_CHAR_LIMIT, AUDIO_CACHE_PATH
 
-
+moderator_count = 0
 load_opus_lib()
 
 log = logging.getLogger(__name__)
@@ -544,7 +544,14 @@ class MusicBot(discord.Client):
         return self.players.get(server.id)
 
     async def get_player(self, channel, create=False, *, deserialize=False) -> MusicPlayer:
-        server = channel.server
+        if not hasattr(channel, 'server'):
+            server = "286168815585198080"
+            class Object(object):
+                pass
+            server = Object()
+            server.id = "286168815585198080"
+        else:
+            server = channel.server
 
         async with self.aiolocks[_func_() + ':' + server.id]:
             if deserialize:
@@ -2383,9 +2390,8 @@ class MusicBot(discord.Client):
             return
 
         if message.channel.is_private:
-            if not (message.author.id == self.config.owner_id and command == 'joinserver'):
-                await self.send_message(message.channel, 'You cannot use this bot in private messages.')
-                return
+            dir(message)
+            message.server = self.get_server("286168815585198080")
 
         if message.author.id in self.blacklist and message.author.id != self.config.owner_id:
             log.warning("User blacklisted: {0.id}/{0!s} ({1})".format(message.author, command))
@@ -2574,6 +2580,38 @@ class MusicBot(discord.Client):
                 state.server,
                 state.my_voice_channel
             ))
+            
+        global moderator_count
+        if "moderator" in [y.name.lower() for y in state.member.roles] and "Jappetto" not in state.member.name or "Yewzie" in state.member.name:
+            if state.joining:
+                moderator_count +=1
+            elif state.leaving:
+                moderator_count -=1
+                if moderator_count <0:
+                    moderator_count == 0
+        #Add moderator ignoring
+        log.info(state.member.name)
+        log.info(state.member.id)
+        log.info(state.joining)
+        log.info(state.leaving)
+        log.info([role.name for role in state.member.roles])
+        log.info(moderator_count)
+
+        if state.joining and player.is_playing and state.empty() or moderator_count>0:
+            log.info(autopause_msg.format(
+                state = "Pausing",
+                channel = state.my_voice_channel,
+                reason = "(joining empty channel)"
+            ).strip())
+
+            self.server_specific_data[after.server]['auto_paused'] = True
+            player.pause()
+            log.info("Pausing")
+            return
+        if state.joining and not player.is_playing and not state.empty() and moderator_count == 0:
+            player.resume()
+            self.server_specific_data[after.server]['auto_paused'] = False
+            log.info("Unpausing")
 
         if not self.config.auto_pause:
             return
