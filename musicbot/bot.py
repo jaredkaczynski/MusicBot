@@ -311,7 +311,8 @@ class MusicBot(discord.Client):
 
     async def _check_ignore_non_voice(self, msg):
         vc = msg.server.me.voice_channel
-
+        print(msg)
+        print(msg.author)
         # If we've connected to a voice chat and we're in the same voice channel
         if not vc or vc == msg.author.voice_channel:
             return True
@@ -545,11 +546,11 @@ class MusicBot(discord.Client):
 
     async def get_player(self, channel, create=False, *, deserialize=False) -> MusicPlayer:
         if not hasattr(channel, 'server'):
-            server = "286168815585198080"
+            server = "459435127932715008"
             class Object(object):
                 pass
             server = Object()
-            server.id = "286168815585198080"
+            server.id = "459435127932715008"
         else:
             server = channel.server
 
@@ -2391,7 +2392,7 @@ class MusicBot(discord.Client):
 
         if message.channel.is_private:
             dir(message)
-            message.server = self.get_server("286168815585198080")
+            message.server = self.get_server("459435127932715008")
 
         if message.author.id in self.blacklist and message.author.id != self.config.owner_id:
             log.warning("User blacklisted: {0.id}/{0!s} ({1})".format(message.author, command))
@@ -2582,7 +2583,7 @@ class MusicBot(discord.Client):
             ))
             
         global moderator_count
-        if "moderator" in [y.name.lower() for y in state.member.roles] and "Jappetto" not in state.member.name or "Yewzie" in state.member.name:
+        if "staff" in [y.name.lower() for y in state.member.roles]:
             if state.joining:
                 moderator_count +=1
             elif state.leaving:
