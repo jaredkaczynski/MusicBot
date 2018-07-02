@@ -2598,6 +2598,11 @@ class MusicBot(discord.Client):
         log.info([role.name for role in state.member.roles])
         log.info(moderator_count)
 
+        autopause_msg = "{state} in {channel.server.name}/{channel.name} {reason}"
+
+        auto_paused = self.server_specific_data[after.server]['auto_paused']
+        player = await self.get_player(state.my_voice_channel)
+        
         if state.joining and player.is_playing and state.empty() or moderator_count>0:
             log.info(autopause_msg.format(
                 state = "Pausing",
@@ -2616,11 +2621,6 @@ class MusicBot(discord.Client):
 
         if not self.config.auto_pause:
             return
-
-        autopause_msg = "{state} in {channel.server.name}/{channel.name} {reason}"
-
-        auto_paused = self.server_specific_data[after.server]['auto_paused']
-        player = await self.get_player(state.my_voice_channel)
 
         if state.joining and state.empty() and player.is_playing:
             log.info(autopause_msg.format(
